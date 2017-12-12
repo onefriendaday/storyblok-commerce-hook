@@ -10,9 +10,17 @@ class HookController < ApplicationController
                                            })
 
     if Customer.find_by_id(customer['id'])
-      Customer.update!(customer)
+      customer_in_your_db = Customer.update!(customer)
     else
-      Customer.create!(customer)
+      customer_in_your_db = Customer.create!(customer)
     end
+
+    # 4 Enrich the customer data with the EUID which is the ID of your system
+    RestClient::Request.execute(method: :post,
+                                url: "https://capi.storyblok.com/v1/customers/#{data_json['id']}",
+                                headers: {
+                                  authentication: "Token token=#{token}"
+                                },
+                                payload: {euid: customer_in_your_db.id})
   end
 end
